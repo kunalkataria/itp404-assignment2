@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Reddit post fetching</title>
+
+  <link rel="stylesheet" href="loader.css" type="text/css" />
+</head>
+<body>
+
+<input id='search-input' placeholder="subreddit name...">
+<button id='search-button'>Search</button>
+
+<hr>
+
+<div class="loader">Loading...</div>
+
+<div id="posts"></div>
+
+<template id="post-template">
+  {{#each posts}}
+    <div class="post">
+      <a href="{{data.url}}">
+        {{data.title}}
+      </a>
+      <p>
+        <div>
+          Score : {{data.score}}
+        </div>
+        <div>
+          {{#if data.num_comments}}
+            {{data.num_comments}} comments
+          {{else}}
+            No comments
+          {{/if}}
+        </div>
+      </p>
+    </div>
+    <hr>
+  {{/each}}
+</template>
+
+
+<script src="jquery-3.2.1.js"></script>
+<script src="handlebars-v4.0.10.js"></script>
+
+<script>
+  $('.loader').hide();
+
+  function fetchPostsForSubreddit(subreddit) {
+    return $.getJSON('https://www.reddit.com/r/' + subreddit + '.json');
+  }
+
+  $('#search-button').on('click', function(){
+    $('.loader').show();
+    $('#posts').hide();
+
+    var postTemplate = $('#post-template').html();
+    var renderPosts = Handlebars.compile(postTemplate);
+
+    var subredditName = $('#search-input').val();
+
+    fetchPostsForSubreddit(subredditName).then(function(response) {
+      var html = renderPosts({
+        posts: response.data.children
+      });
+
+      $('#posts').html(html);
+
+      $('.loader').hide();
+      $('#posts').show();
+    }, function() {
+      $('.loader').hide();
+      $('#posts').text("Oops, something went wrong!");
+      $('#posts').show();
+    });
+  });
+
+</script>
+
+</body>
+</html>
